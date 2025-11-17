@@ -1,0 +1,95 @@
+name: Publish to PyPI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "pyproject.toml"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  check-version:
+    name: Check version bump
+    runs-on: ubuntu-latest
+
+    outputs:
+      new_version: ${{ steps.extract.outputs.new_version }}
+      old_version: ${{ steps.extract.outputs.old_version }}
+      changed: ${{ steps.compare.outputs.changed }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract new version
+        id: extract
+        run: |
+          NEW_VERSION=$(grep -Po '(?<=version = ").*(?=")' pyproject.toml)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+          # беремо попередню версію з HEAD~1
+          OLD_VERSION=$(git show HEAD~1:pyproject.toml | grep -Po '(?<=version = ").*(?=")' || echo "none")
+          echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Compare versions
+        id: compare
+        run: |
+          if [ "${{ steps.extract.outputs.new_version }}" != "${{ steps.extract.outputs.old_version }}" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    name: Build package
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    environment: publish
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download built package
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Publish using Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@release/v1
