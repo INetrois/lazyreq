@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 import json
 
-# Простий кеш встановлених пакетів
 _CACHE_PATH = Path.home() / ".lazyreq" / "cache.json"
 _CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
@@ -19,10 +18,8 @@ def _save_cache():
         json.dump(_cache, f, indent=2)
 
 def _install(package: str):
-    """Встановлює пакет через pip, якщо ще не встановлений"""
     if package in _cache:
         return
-    print(f"[lazyreq] Installing '{package}' ...", flush=True)
     result = subprocess.run(
         [sys.executable, "-m", "pip", "install", package],
         stdout=subprocess.PIPE,
@@ -30,12 +27,8 @@ def _install(package: str):
         text=True,
     )
     if result.returncode == 0:
-        print(f"✔ '{package}' installed successfully", flush=True)
         _cache[package] = True
         _save_cache()
-    else:
-        print(f"❌ Failed to install '{package}'", flush=True)
-        print(result.stderr, flush=True)
 
 class LazyModule:
     """
@@ -43,7 +36,7 @@ class LazyModule:
 
     Example:
         np = LazyModule("numpy")
-        print(np.arange(5))  # встановиться і імпортується при першому виклику
+        print(np.arange(5))
     """
 
     def __init__(self, package: str, import_name: str = None):

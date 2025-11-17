@@ -1,7 +1,7 @@
 [project]
 name = "lazyreq"
 version = "0.1.0"
-description = "A library to auto-install and manage dependencies."
+description = "A library for manage dependencies."
 readme = "README.md"
 authors = [
     { name = "Netronis" }
@@ -12,21 +12,16 @@ license = "Apache-2.0"
 dependencies = []
 
 [project.optional-dependencies]
+demo = [
+  "numpy>=2.0.2",
+]
+
 dev = [
   "pytest>=8.4.2",
   "ruff>=0.6.9",
   "mypy>=1.11.2",
   "build>=1.3.0",
   "twine>=6.2.0",
-]
-
-docs = [
-  "mkdocs>=1.6.1",
-  "mkdocs-autorefs>=1.4.3",
-  "mkdocs-git-revision-date-localized-plugin>=1.5.0",
-  "mkdocs-material>=9.6.23",
-  "mkdocs-minify-plugin>=0.8.0",
-  "mkdocstrings[python]>=0.30.1",
 ]
 
 [project.urls]
@@ -42,14 +37,14 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-addopts = "-v --tb=short --strict-markers"
+addopts = "-qv --tb=short --strict-markers"
 markers = [
   "slow: marks tests as slow",
   "integration: marks tests as integration tests",
 ]
 
 [project.scripts]
-lazyreq = "lazyreq.cli:main"
+demo = "demo:main"
 
 [build-system]
 requires = ["uv_build>=0.9.8,<0.10.0"]
