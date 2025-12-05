@@ -33,7 +33,6 @@ jobs:
           NEW_VERSION=$(grep -Po '(?<=version = ").*(?=")' pyproject.toml)
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-          # беремо попередню версію з HEAD~1
           OLD_VERSION=$(git show HEAD~1:pyproject.toml | grep -Po '(?<=version = ").*(?=")' || echo "none")
           echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
 
@@ -78,7 +77,7 @@ jobs:
     needs: build
     if: needs.check-version.outputs.changed == 'true'
     runs-on: ubuntu-latest
-    environment: publish
+    environment: pypi
 
     permissions:
       id-token: write
